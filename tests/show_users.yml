@@ -1,0 +1,15 @@
+---
+- hosts: test_hosts
+  gather_facts: no
+  become: yes  # This makes Ansible use sudo to execute commands as root
+  tasks:
+    - name: Get a list of all users
+      shell: getent passwd
+      register: passwd_output
+
+    - name: Filter out non-system users
+      set_fact:
+        system_users: "{{ passwd_output.stdout_lines | select('regex', '^([^:]*:){2}(0|1|2|3|4|5|6|7):') | map('split', ':') | map(attribute=0) | list }}"
+
+    - debug:
+        var: system_users
