@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build -t passwd-tst .
+docker build --no-cache -t passwd-tst .
