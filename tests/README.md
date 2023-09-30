@@ -4,13 +4,15 @@
 ## Prerequisites
 
 - Docker
+- Public key
 
 ## Usage
 
+Currently, you will need to pass your public key as an argument in build.sh or hard-code it into the Dockerfile, then run the following:
 ```bash
 ./run_test.sh
 ```
-
+This builds and sets up 4 docker containers as standalone linux hosts. Ansible scripts can be run against them to show that they're working
 ```
 [+] Building . . .
 [SNIP]
@@ -28,7 +30,7 @@ Test is running!
 Press Enter to kill ALL Docker containers
 ```
 
-You can then use the test_hosts.ini as an inventory list and show_users.yml to list non-system users using ansible.
+You can then use the test_hosts.ini as an inventory list and show_users.yml to list all users using ansible or you can change all non-system user passwords to a predefined value.
 
 When you're done, you can press enter to kill all running docker containers
 ```

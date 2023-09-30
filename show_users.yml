@@ -7,9 +7,9 @@
       shell: getent passwd
       register: passwd_output
 
-    - name: Filter out non-system users
+    - name: Show all users
       set_fact:
-        system_users: "{{ passwd_output.stdout_lines | select('regex', '^([^:]*:){2}(0|1|2|3|4|5|6|7):') | map('split', ':') | map(attribute=0) | list }}"
+        system_users: "{{ passwd_output.stdout_lines | list }}"
 
     - debug:
         var: system_users
