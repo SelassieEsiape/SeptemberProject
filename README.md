@@ -1,6 +1,6 @@
 # Mass Password Changer
 
-Provides a script (show_users.yml) for listing all accounts on hosts. For all hosts, you can set a new password (reset_password.yml) for all non-system users. This functionality provides you a nuclear option for fast containment and recovery when dealing with an incident.
+Provides a script (show_users.yml) for listing all accounts on hosts. For all hosts, you can set a new password and SSH public key (reset_password.yml) for all non-system users (all users will need to reset their password after first login). This functionality provides you a nuclear option for fast containment and recovery when dealing with an incident.
 
 NOTE: This assumes you're not using LDAP; using this against LDAP-bound servers may result in unintended consequences.
 
