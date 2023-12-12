@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
 
 # Get the public key as a build argument
-ARG PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBznwIb7wGsPVKqUqehpBK7wpUBHaiqU1HQEwfc48LzP kcrook@live.com"
+ARG PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBznwIb7wGsPVKqUqehpBK7wpUBHaiqU1HQEwfc48LzP"
 
 # Add the provided public key to the container's authorized keys for root
 RUN mkdir -p /root/.ssh
