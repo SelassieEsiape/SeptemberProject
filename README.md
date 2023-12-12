@@ -1,8 +1,14 @@
 # Mass Password Changer
 
-Provides a script (show_users.yml) for listing all accounts on hosts. For all hosts, you can set a new password and SSH public key (reset_password.yml) for all non-system users (all users will need to reset their password after first login). This functionality provides you a nuclear option for fast containment and recovery when dealing with an incident.
+Provides a script (show_users.yml) for listing all accounts on hosts. For all hosts:
+- Each non-system user will receive a random temporary password
+- Each non-system user will be required to change their password on next sign-in
+- Any ~/.ssh/authorized_keys files will be backed up to authorized_keys.old and replaced with the admin's public SSH key
+- The resulting randomized passwords are shown in the output for each host and user
 
-NOTE: This assumes you're not using LDAP; using this against LDAP-bound servers may result in unintended consequences.
+This functionality provides you a nuclear option for fast containment and recovery when dealing with an incident.
+
+WARNING: This assumes you're not using LDAP; using this against LDAP-bound servers may result in unintended consequences.
 
 ## Usage Examples
 
@@ -48,7 +54,8 @@ test4                      : ok=3    changed=1    unreachable=0    failed=0    s
 ```
 
 
-### Set all non-system user passwords to a hard-coded string
+### Set all non-system user passwords to a randomized string and disable authorized_keys
+Shows the resulting new password in the ansible output for reference
 #### Example Command
 ```bash
 ansible-playbook -i inventory.ini -u root reset_passwords.yml
@@ -62,17 +69,40 @@ ok: [test4]
 ok: [test2]
 ok: [test1]
 
-TASK [Set the same password for all non-system users] ******************************************************************************************************************************************
-changed: [test4] => (item=user1)
-changed: [test3] => (item=user1)
+TASK [Generate a unique random password for each user and store it] ***************************
+ok: [test1] => (item=user1)
+ok: [test2] => (item=user1)
 [SNIP]
-changed: [test2] => (item=user3)
+ok: [test2] => (item=user3)
+ok: [test4] => (item=user3)
 
-PLAY RECAP *************************************************************************************************************************************************************************************
-test1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test2                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test3                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test4                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0  
+
+TASK [Set the unique random password for each non-system user] ********************************
+changed: [test4] => (item={'user': 'user1', 'password': 'cdpZhm9jSJDO'})
+changed: [test3] => (item={'user': 'user1', 'password': 'n0PiIv5kJQvZ'})
+[SNIP]
+changed: [test1] => (item={'user': 'user3', 'password': 'XCRp9qzn60N6'})
+changed: [test3] => (item={'user': 'user3', 'password': 'baYo6BFjDGBq'})
+
+TASK [Backup existing authorized_keys file to authorized_keys.old] ****************************
+skipping: [test2] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/user1/.ssh/authorized_keys', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'user1', 'ansible_loop_var': 'item'}) 
+[SNIP]
+changed: [test1] => (item={'changed': False, 'stat': {'exists': True, 'path': '/home/user1/.ssh/authorized_keys', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1000, 'gid': 1000, 'size': 0, 'inode': 12997597, 'dev': 52, 'nlink': 1, 'atime': 1701409596.6590085, 'mtime': 1701409596.6590085, 'ctime': 1701409604.7069907, 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False, 'blocks': 0, 'block_size': 4096, 'device_type': 0, 'readable': True, 'writeable': True, 'executable': False, 'pw_name': 'user1', 'gr_name': 'user1', 'checksum': 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'mimetype': 'unknown', 'charset': 'unknown', 'version': None, 'attributes': [], 'attr_flags': ''}, 'invocation': {'module_args': {'path': '/home/user1/.ssh/authorized_keys', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'user1', 'ansible_loop_var': 'item'})
+[SNIP]
+
+TASK [Replace content of authorized_keys file with a new SSH key] *****************************
+[SNIP]
+skipping: [test3] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/user2/.ssh/authorized_keys', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'user2', 'ansible_loop_var': 'item'}) 
+skipping: [test3] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/user3/.ssh/authorized_keys', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'user3', 'ansible_loop_var': 'item'}) 
+skipping: [test3]
+changed: [test1] => (item={'changed': False, 'stat': {'exists': True, 'path': '/home/user1/.ssh/authorized_keys', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1000, 'gid': 1000, 'size': 0, 'inode': 12997597, 'dev': 52, 'nlink': 1, 'atime': 1701409596.6590085, 'mtime': 1701409596.6590085, 'ctime': 1701409604.7069907, 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False, 'blocks': 0, 'block_size': 4096, 'device_type': 0, 'readable': True, 'writeable': True, 'executable': False, 'pw_name': 'user1', 'gr_name': 'user1', 'checksum': 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'mimetype': 'unknown', 'charset': 'unknown', 'version': None, 'attributes': [], 'attr_flags': ''}, 'invocation': {'module_args': {'path': '/home/user1/.ssh/authorized_keys', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'user1', 'ansible_loop_var': 'item'})
+[SNIP]
+
+PLAY RECAP ************************************************************************************
+test1                      : ok=7    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+test2                      : ok=5    changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+test3                      : ok=5    changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+test4                      : ok=5    changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
 ```
 After which, you can test that the change had the intended effect:
 ```bash
@@ -82,43 +112,33 @@ ssh user1@localhost -p 2222
 # OR while already on the container
 su user1
 Password: # Enter new password to test
-```
 
-### Pass in a password
-#### Example Command
-```bash
-ansible-playbook -i inventory.ini -u root -e "change_password=password1!" reset_passwords.yml
-```
-#### Result
-All hosts and user accounts are changed to the new password passed in as the environment
-```bash
-TASK [Fetch non-system users] ******************************************************************************************************************************************************************
-ok: [test3]
-ok: [test4]
-ok: [test2]
-ok: [test1]
-
-TASK [Set the same password for all non-system users] ******************************************************************************************************************************************
-changed: [test4] => (item=user1)
-changed: [test3] => (item=user1)
+You are required to change your password immediately (administrator enforced).
+You are required to change your password immediately (administrator enforced).
 [SNIP]
-changed: [test3] => (item=user3)
-changed: [test2] => (item=user3)
-
-PLAY RECAP *************************************************************************************************************************************************************************************
-test1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test2                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test3                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-test4                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+Last login: Fri Dec  1 05:19:32 2023 from 172.17.0.1
+WARNING: Your password has expired.
+You must change your password now and login again!
+Changing password for user1.
+Current password: 
+New password: 
+Retype new password: 
+passwd: password updated successfully
+Connection to localhost closed.
 ```
-After which, you can test that the change had the intended effect:
+If they had an authorized key file:
 ```bash
-# using ssh
-ssh user1@localhost -p 2222
-    # enter new password to test
-# OR while already on the container
-su user1
-Password: # Enter new password to test
+ssh user1@localhost
+$ whoami
+user1
+$ cd .ssh
+$ ls
+authorized_keys  authorized_keys.old
+$ cat authorized_keys
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBznwIb7wGsPVKqUqehpBK7wpUBHaiqU1HQEwfc48LzP$ 
+# ^ The above is the admin's public key as enforced by the script
+$ cat authorized_keys.old
+OldContentBadSSHKeyForBaddieToReturn
 ```
 
 ## Testing Process
